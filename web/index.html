@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MediFlow - Hospital OPD</title>
+<style>
+:root{
+  --bg:#0a0f1f; --bg2:#0f1730; --panel:#131c3a; --panel2:#1a2550; --text:#e9edff; --muted:#93a0cc;
+  --brand:#5b8cff; --brand2:#22d3ee; --ok:#34d399; --warn:#fbbf24; --danger:#f87171; --violet:#a78bfa;
+  --border:rgba(255,255,255,.08); --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
+  --font:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+[data-theme=light]{
+  --bg:#eef2fb; --bg2:#e4eafa; --panel:#ffffff; --panel2:#f1f5ff; --text:#0f1b3d; --muted:#5d6b94;
+  --border:rgba(15,27,61,.10); --shadow:0 8px 24px rgba(30,50,110,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--font);background:radial-gradient(1200px 600px at 80% -10%,rgba(91,140,255,.18),transparent),
+  radial-gradient(900px 500px at -10% 110%,rgba(34,211,238,.12),transparent),var(--bg);color:var(--text);}
+button,input,select,textarea{font-family:inherit;font-size:14px;color:var(--text)}
+.app{display:flex;min-height:100vh}
+/* ---------- sidebar ---------- */
+.side{width:240px;flex:0 0 240px;background:linear-gradient(180deg,var(--panel),var(--bg2));border-right:1px solid var(--border);
+  padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+.logo{display:flex;align-items:center;gap:12px;padding:6px 10px 18px}
+.logo .mark{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+  display:grid;place-items:center;font-size:22px;box-shadow:0 6px 18px rgba(91,140,255,.45)}
+.logo b{font-size:18px;letter-spacing:.3px;display:block}
+.logo small{color:var(--muted);font-size:11px}
+.nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;border:0;background:transparent;
+  color:var(--muted);cursor:pointer;text-align:left;font-weight:600;transition:.18s}
+.nav:hover{background:var(--panel2);color:var(--text)}
+.nav.active{background:linear-gradient(135deg,rgba(91,140,255,.25),rgba(34,211,238,.12));color:var(--text);
+  box-shadow:inset 0 0 0 1px rgba(91,140,255,.35)}
+.nav span.ic{width:22px;text-align:center}
+.side .foot{margin-top:auto;padding:12px;border-radius:12px;background:var(--panel2);font-size:12px;color:var(--muted);line-height:1.5}
+.side .foot b{color:var(--text)}
+/* ---------- main ---------- */
+main{flex:1;min-width:0;padding:22px 28px 60px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.top h1{margin:0;font-size:26px;flex:1;min-width:200px}
+.top h1 small{display:block;font-size:13px;color:var(--muted);font-weight:500;margin-top:3px}
+.pill{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--border);
+  font-size:13px;color:var(--muted)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(52,211,153,.7);animation:pulse 2s infinite}
+.dot.off{background:var(--danger);animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.6)}70%{box-shadow:0 0 0 9px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px;
+  background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.12)}
+.btn.primary{background:linear-gradient(135deg,var(--brand),#7aa2ff);border:0;color:#fff;box-shadow:0 6px 18px rgba(91,140,255,.4)}
+.btn.ok{background:linear-gradient(135deg,#10b981,var(--ok));border:0;color:#04261b}
+.btn.danger{background:rgba(248,113,113,.14);color:var(--danger);border-color:rgba(248,113,113,.35)}
+.btn.sm{padding:6px 11px;border-radius:9px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:16px}
+.stats{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:20px}
+.stat{position:relative;overflow:hidden;padding:16px 18px}
+.stat .ic{position:absolute;right:12px;top:10px;font-size:30px;opacity:.9}
+.stat .lbl{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.8px;font-weight:700}
+.stat .val{font-size:34px;font-weight:800;margin:6px 0 2px}
+.stat .sub{color:var(--muted);font-size:12px}
+.stat::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--c,var(--brand))}
+.docs{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.sec{display:flex;align-items:center;justify-content:space-between;margin:26px 0 12px}
+.sec h2{margin:0;font-size:18px}
+.sec small{color:var(--muted)}
+/* ---------- doctor card ---------- */
+.dhead{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.avatar{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-weight:800;color:#fff;
+  background:linear-gradient(135deg,var(--violet),var(--brand))}
+.dhead b{display:block;font-size:16px}
+.dhead small{color:var(--muted)}
+.serving{display:flex;align-items:center;gap:14px;background:var(--panel2);border-radius:14px;padding:12px 14px;margin-bottom:12px;border:1px solid var(--border)}
+.serving .tk{min-width:64px;height:54px;border-radius:12px;display:grid;place-items:center;font-size:24px;font-weight:800;
+  background:linear-gradient(135deg,#10b981,var(--ok));color:#04261b;animation:glow 2.4s infinite}
+.serving .tk.free{background:var(--panel);color:var(--muted);animation:none;font-size:14px;border:1px dashed var(--border)}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.5)}50%{box-shadow:0 0 18px 2px rgba(52,211,153,.45)}}
+.serving small{color:var(--muted);display:block}
+.lane{margin:10px 0}
+.lane .lt{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px;letter-spacing:.5px}
+.lane .lt span:first-child{color:var(--muted)}
+.lane.em .lt span:first-child{color:var(--danger)}
+.chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center;min-height:46px}
+.chip{background:linear-gradient(135deg,rgba(91,140,255,.22),rgba(91,140,255,.1));border:1px solid rgba(91,140,255,.4);border-radius:12px;
+  padding:6px 10px;font-weight:800;font-size:15px;line-height:1.1;animation:pop .35s;cursor:default}
+.chip small{display:block;font-size:10px;font-weight:600;color:var(--muted);max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.em{background:linear-gradient(135deg,rgba(248,113,113,.28),rgba(248,113,113,.1));border-color:rgba(248,113,113,.55)}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.tag{font-size:10px;font-weight:800;letter-spacing:1px;padding:4px 8px;border-radius:7px;background:var(--panel2);color:var(--muted)}
+.tag.f{background:rgba(52,211,153,.18);color:var(--ok)}
+.tag.r{background:rgba(251,191,36,.18);color:var(--warn)}
+.empty{color:var(--muted);font-size:13px;font-style:italic}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+/* ---------- bars ---------- */
+.bar{display:flex;align-items:center;gap:12px;margin:10px 0;font-size:13px}
+.bar .nm{width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.bar .tr{flex:1;height:12px;border-radius:99px;background:var(--panel2);overflow:hidden}
+.bar .fi{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .6s}
+.bar .n{width:30px;text-align:right;font-weight:800}
+/* ---------- misc ---------- */
+.cells{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.cell{position:relative;width:44px;height:50px;border-radius:10px;border:1px dashed var(--border);display:grid;place-items:center;
+  font-weight:800;background:var(--panel2);transition:.25s}
+.cell .idx{position:absolute;left:4px;top:2px;font-size:9px;color:var(--muted);font-weight:600}
+.cell.on{border:1px solid rgba(91,140,255,.6);background:linear-gradient(135deg,rgba(91,140,255,.3),rgba(34,211,238,.14))}
+.cell.f{outline:2px solid var(--ok)}
+.cell.r{box-shadow:0 0 0 2px var(--warn)}
+.ptr{position:absolute;bottom:-9px;font-style:normal;font-size:9px;font-weight:900;padding:1px 5px;border-radius:5px;color:#04120c}
+.ptr.f{left:2px;background:var(--ok)}
+.ptr.r{right:2px;background:var(--warn)}
+.meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:16px}
+.meta b{color:var(--text)}
+.qtitle{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:10px 0 0}
+/* ---------- forms ---------- */
+.grid2{grid-template-columns:minmax(300px,1.2fr) minmax(280px,1fr)}
+.f{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.f label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.f input,.f select,.f textarea{background:var(--panel2);border:1px solid var(--border);border-radius:11px;padding:11px 12px;outline:0;transition:.15s}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(91,140,255,.25)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.switch{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);cursor:pointer}
+.switch input{width:18px;height:18px;accent-color:#f87171}
+.ticket{border:2px dashed var(--brand);border-radius:18px;padding:22px;text-align:center;background:linear-gradient(180deg,rgba(91,140,255,.12),transparent)}
+.ticket .big{font-size:64px;font-weight:900;line-height:1;background:linear-gradient(135deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ticket p{margin:6px 0;color:var(--muted)}
+.ticket p b{color:var(--text)}
+/* ---------- table ---------- */
+.tw{overflow:auto;border-radius:14px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{background:var(--panel2);text-align:left;padding:11px 12px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.7px;white-space:nowrap}
+td{padding:11px 12px;border-top:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:rgba(91,140,255,.06)}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;letter-spacing:.4px}
+.b-WAITING{background:rgba(251,191,36,.16);color:var(--warn)}
+.b-SERVING{background:rgba(52,211,153,.16);color:var(--ok)}
+.b-DONE{background:rgba(91,140,255,.18);color:var(--brand)}
+.b-CANCELLED{background:rgba(248,113,113,.16);color:var(--danger)}
+.b-REGISTER{background:rgba(91,140,255,.18);color:var(--brand)}
+.b-CALL{background:rgba(52,211,153,.16);color:var(--ok)}
+.b-REMOVE{background:rgba(248,113,113,.16);color:var(--danger)}
+.b-UPDATE{background:rgba(251,191,36,.16);color:var(--warn)}
+.b-VIEW,.b-FINISH,.b-DOCTOR,.b-RESET{background:rgba(167,139,250,.18);color:var(--violet)}
+.search{width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--border);background:var(--panel2);outline:0;font-size:15px}
+.search:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(91,140,255,.25)}
+/* ---------- board ---------- */
+.board{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.bcard{text-align:center;padding:26px 18px}
+.bcard .dn{font-size:18px;font-weight:800}
+.bcard .dd{color:var(--muted);margin-bottom:14px}
+.bcard .num{font-size:96px;font-weight:900;line-height:1;background:linear-gradient(135deg,var(--ok),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.bcard .num.none{font-size:40px;color:var(--muted);-webkit-text-fill-color:var(--muted)}
+.bcard .nx{margin-top:14px;color:var(--muted);font-size:14px}
+.bcard .nx b{color:var(--text)}
+/* ---------- misc ---------- */
+.note{font-size:13px;color:var(--muted);line-height:1.7}
+.note code{background:var(--panel2);padding:2px 7px;border-radius:6px;color:var(--brand2);font-weight:700}
+#toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:10px;z-index:99}
+.toast{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--brand);padding:12px 16px;border-radius:12px;box-shadow:var(--shadow);
+  min-width:240px;max-width:380px;animation:slide .3s;font-size:14px}
+.toast.ok{border-left-color:var(--ok)} .toast.err{border-left-color:var(--danger)}
+@keyframes slide{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
+#modal{position:fixed;inset:0;background:rgba(3,7,20,.65);backdrop-filter:blur(4px);display:none;place-items:center;z-index:90;padding:16px}
+#modal.show{display:grid}
+#modal .box{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;width:min(520px,100%);max-height:92vh;overflow:auto;box-shadow:var(--shadow);animation:pop .25s}
+#modal h3{margin:0 0 16px}
+.mfoot{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+.hint{color:var(--muted);font-size:13px;padding:30px;text-align:center}
+@media(max-width:900px){
+  .app{flex-direction:column}
+  .side{position:static;width:100%;height:auto;flex-direction:row;flex-wrap:wrap;padding:10px}
+  .side .foot,.logo small{display:none}.logo{padding:4px 8px}
+  main{padding:16px}
+  .grid2{grid-template-columns:1fr}
+}
+@media print{
+  .side,.top,#toasts,.noprint{display:none!important}
+  body{background:#fff;color:#000} main{padding:0}
+  .ticket{border-color:#000}.ticket .big{color:#000;-webkit-text-fill-color:#000;background:none}
+  .ticket p,.ticket p b{color:#000}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="logo"><div class="mark">🏥</div><div><b>MediFlow</b><small>Hospital OPD System</small></div></div>
+    <button class="nav" data-view="dashboard"><span class="ic">📊</span>Dashboard</button>
+    <button class="nav" data-view="register"><span class="ic">➕</span>Register Patient</button>
+    <button class="nav" data-view="patients"><span class="ic">🔎</span>Find / Edit</button>
+    <button class="nav" data-view="history"><span class="ic">🗂️</span>History</button>
+    <button class="nav" data-view="log"><span class="ic">📜</span>Activity Log</button>
+    <button class="nav" data-view="board"><span class="ic">📺</span>Display Board</button>
+    <div class="foot"><b>MediFlow</b><br>Out-Patient Department<br>Patient flow management</div>
+  </aside>
+  <main>
+    <div class="top">
+      <h1 id="pageTitle">Dashboard<small id="pageSub"></small></h1>
+      <div class="pill"><span class="dot" id="dot"></span><span id="conn">Live</span></div>
+      <div class="pill" id="clock">--:--</div>
+      <button class="btn" onclick="toggleTheme()" title="Switch theme">🌓</button>
+      <button class="btn" onclick="addDoctorModal()">🩺 Add doctor</button>
+      <button class="btn" onclick="loadDemo()">✨ Load demo data</button>
+      <button class="btn danger" onclick="resetAll()">🗑 Reset</button>
+    </div>
+    <div id="view"><div class="hint">Loading...</div></div>
+  </main>
+</div>
+<div id="toasts"></div>
+<div id="modal"><div class="box" id="modalBox"></div></div>
+
+<script>
+"use strict";
+/* ============================ helpers ============================ */
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let S = null;                 // latest state from the server
+let view = "dashboard";
+let preDoc = null;            // doctor preselected for the register form
+let searchSeq = 0;
+
+const TITLES = {
+  dashboard: ["Dashboard", "Live overview of every doctor's waiting patients"],
+  register:  ["Register Patient", "Add a patient and issue a token"],
+  patients:  ["Find / Edit Patients", "Search, update or cancel a waiting patient"],
+  history:   ["History", "Patients already served or cancelled"],
+  log:       ["Activity Log", "Every action is recorded in the database"],
+  board:     ["Display Board", "Waiting-room screen: who is being served now"]
+};
+
+function toast(msg, type) {
+  const t = document.createElement("div");
+  t.className = "toast " + (type || "");
+  t.textContent = msg;
+  $("#toasts").appendChild(t);
+  setTimeout(() => t.remove(), 4200);
+}
+function setOnline(ok) {
+  $("#dot").classList.toggle("off", !ok);
+  $("#conn").textContent = ok ? "Live" : "Server offline";
+}
+async function api(method, url, body) {
+  const opt = { method, headers: {} };
+  if (body !== undefined) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
+  let r;
+  try { r = await fetch("/api" + url, opt); }
+  catch (e) { setOnline(false); throw new Error("Cannot reach the server. Is the Java program running?"); }
+  setOnline(true);
+  let data = {};
+  try { data = await r.json(); } catch (e) { /* empty body */ }
+  if (!r.ok) throw new Error(data.error || ("HTTP " + r.status));
+  return data;
+}
+async function act(promise, okMsg) {
+  try {
+    const d = await promise;
+    toast(okMsg || d.message || "Done", "ok");
+    await refresh(true);
+    return d;
+  } catch (e) { toast(e.message, "err"); return null; }
+}
+const fmtTime = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-";
+const fmtDT = iso => iso ? new Date(iso).toLocaleString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "-";
+const initials = n => String(n).replace(/^dr\.?\s*/i, "").split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+const firstName = n => String(n).split(/\s+/)[0];
+const doctorById = id => (S ? S.doctors : []).find(d => d.id === id);
+
+/* ============================ modal ============================ */
+function openModal(html) { $("#modalBox").innerHTML = html; $("#modal").classList.add("show"); }
+function closeModal() { $("#modal").classList.remove("show"); $("#modalBox").innerHTML = ""; }
+$("#modal").addEventListener("mousedown", e => { if (e.target.id === "modal") closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+const modalOpen = () => $("#modal").classList.contains("show");
+
+/* ============================ theme / clock ============================ */
+function toggleTheme() {
+  const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem("mf-theme", t); } catch (e) { }
+}
+try { const t = localStorage.getItem("mf-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) { }
+function tick() { $("#clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
+setInterval(tick, 1000); tick();
+
+/* ============================ shared components ============================ */
+function chip(p) {
+  const tip = esc(p.name + " - " + p.complaint + (p.waitMin != null ? " (about " + p.waitMin + " min)" : ""));
+  return `<div class="chip ${p.emergency ? "em" : ""}" title="${tip}">${p.token}<small>${esc(firstName(p.name))}</small></div>`;
+}
+function linearViz(lane, emptyText) {
+  if (!lane.patients.length) return `<div class="chips"><span class="empty">${emptyText || "Nobody waiting"}</span></div>`;
+  return `<div class="chips"><span class="tag f">NEXT</span>${lane.patients.map(chip).join("")}</div>`;
+}
+function servingBox(d) {
+  if (!d.serving) return `<div class="serving"><div class="tk free">FREE</div><div><b>Doctor is free</b><small>Press "Call next" to call a patient</small></div></div>`;
+  const p = d.serving;
+  return `<div class="serving"><div class="tk">${p.token}</div><div><b>${esc(p.name)}</b><small>${esc(p.age)} yrs &bull; ${esc(p.gender)} &bull; ${esc(p.complaint)}</small>` +
+         `<small>Called at ${fmtTime(p.calledAt)}</small></div></div>`;
+}
+
+/* ============================ VIEWS ============================ */
+function viewDashboard() {
+  const st = S.stats;
+  const cards = [
+    ["⏳", "Waiting", st.waiting, "across all doctors", "var(--warn)"],
+    ["🚨", "Emergency", st.emergencyWaiting, "waiting now", "var(--danger)"],
+    ["🩺", "In consultation", st.serving, "with doctors now", "var(--ok)"],
+    ["✅", "Served", st.done, "completed visits", "var(--brand)"],
+    ["❌", "Cancelled", st.cancelled, "tokens cancelled", "var(--muted)"],
+    ["⏱️", "Avg wait", st.avgWaitMin + " min", "register -> called", "var(--violet)"]
+  ];
+  const cap = S.normalCapacity + S.emergencyCapacity;
+  return `
+  <div class="grid stats">${cards.map(c => `<div class="card stat" style="--c:${c[4]}"><span class="ic">${c[0]}</span><div class="lbl">${c[1]}</div><div class="val">${c[2]}</div><div class="sub">${c[3]}</div></div>`).join("")}</div>
+  <div class="sec"><h2>Doctor desks</h2><small>Emergency patients are called first, then regular patients in order of arrival</small></div>
+  <div class="grid docs">${S.doctors.map(d => `
+    <div class="card">
+      <div class="dhead"><div class="avatar">${esc(initials(d.name))}</div><div><b>${esc(d.name)}</b><small>${esc(d.department)} &bull; ${esc(d.room)} &bull; ~${d.avgMinutes} min / patient</small></div></div>
+      ${servingBox(d)}
+      <div class="lane em"><div class="lt"><span>🚨 EMERGENCY PATIENTS</span><span>${d.emergency.size}/${d.emergency.capacity}</span></div>${linearViz(d.emergency, "No emergency patients")}</div>
+      <div class="lane"><div class="lt"><span>🧍 REGULAR PATIENTS</span><span>${d.normal.size}/${d.normal.capacity}</span></div>${linearViz(d.normal, "No patients waiting")}</div>
+      <div class="actions">
+        <button class="btn ok" onclick="callNext(${d.id})">▶ Call next</button>
+        <button class="btn" onclick="showNext(${d.id})">👁 View next</button>
+        <button class="btn primary" onclick="goRegister(${d.id})">+ Register</button>
+      </div>
+    </div>`).join("")}</div>
+  <div class="sec"><h2>Department load</h2><small>waiting patients vs. capacity</small></div>
+  <div class="card">${S.doctors.map(d => `<div class="bar"><div class="nm">${esc(d.department)} - ${esc(d.name)}</div><div class="tr"><div class="fi" style="width:${Math.min(100, d.waiting / cap * 100)}%"></div></div><div class="n">${d.waiting}</div></div>`).join("")}</div>`;
+}
+
+function viewRegister() {
+  const opts = S.doctors.map(d => `<option value="${d.id}" ${d.id === preDoc ? "selected" : ""}>${esc(d.name)} - ${esc(d.department)}</option>`).join("");
+  return `
+  <div class="grid grid2">
+    <div class="card">
+      <div class="f"><label>Patient name</label><input id="r_name" placeholder="e.g. Ali Khan" maxlength="60"></div>
+      <div class="row">
+        <div class="f"><label>Age</label><input id="r_age" type="number" min="0" max="120" placeholder="e.g. 35"></div>
+        <div class="f"><label>Gender</label><select id="r_gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+      </div>
+      <div class="f"><label>Phone</label><input id="r_phone" placeholder="03XX-XXXXXXX" maxlength="20"></div>
+      <div class="f"><label>Doctor / Department</label><select id="r_doc" onchange="regPreview()">${opts}</select></div>
+      <div class="f"><label>Complaint</label><input id="r_comp" placeholder="e.g. Chest pain" maxlength="100"></div>
+      <label class="switch"><input type="checkbox" id="r_em" onchange="regPreview()"><span><b>🚨 Emergency</b><br><small style="color:var(--muted)">Emergency patients are called before regular patients</small></span></label>
+      <div class="actions"><button class="btn primary" onclick="submitRegister()">➕ Register patient</button></div>
+    </div>
+    <div>
+      <div class="card" id="regPreview"></div>
+      <div id="ticketBox" style="margin-top:16px"></div>
+    </div>
+  </div>`;
+}
+function regPreview() {
+  const box = $("#regPreview"); if (!box) return;
+  const d = doctorById(parseInt($("#r_doc").value, 10)); if (!d) { box.innerHTML = ""; return; }
+  const em = $("#r_em").checked;
+  const lane = em ? d.emergency : d.normal;
+  const pos = em ? d.emergency.size : d.emergency.size + d.normal.size;
+  const wait = (pos + (d.serving ? 1 : 0)) * d.avgMinutes;
+  box.innerHTML = `<b>Waiting patients - ${esc(d.name)}</b>
+    <p class="note" style="margin:8px 0 12px">${em ? "Emergency" : "Regular"} patients: <b>${lane.size}</b> of ${lane.capacity}. ${lane.size >= lane.capacity ? '<span style="color:var(--danger)"><b>FULL - registration is not possible right now</b></span>' : ""}</p>
+    ${linearViz(lane, "Nobody is waiting - this patient will be first")}
+    <p class="note" style="margin-top:12px">New patient will be <b>#${pos + 1}</b> in line &bull; estimated wait <b>~${wait} min</b></p>`;
+}
+async function submitRegister() {
+  const body = {
+    name: $("#r_name").value, age: $("#r_age").value, gender: $("#r_gender").value, phone: $("#r_phone").value,
+    doctorId: parseInt($("#r_doc").value, 10), complaint: $("#r_comp").value, emergency: $("#r_em").checked
+  };
+  try {
+    const p = await api("POST", "/patients", body);
+    toast("Token " + p.token + " registered for " + p.doctorName, "ok");
+    preDoc = p.doctorId;
+    await refresh(true);
+    ["r_name", "r_age", "r_phone", "r_comp"].forEach(id => $("#" + id).value = "");
+    $("#r_em").checked = false;
+    regPreview();
+    $("#ticketBox").innerHTML = `<div class="ticket">
+      <div style="color:var(--muted);font-weight:700;letter-spacing:2px">OPD TOKEN</div>
+      <div class="big">${p.token}</div>
+      <p><b>${esc(p.name)}</b> (${esc(p.age)}, ${esc(p.gender)})</p>
+      <p>${esc(p.doctorName)} &bull; ${esc(p.department)}</p>
+      <p>${p.emergency ? "🚨 <b>EMERGENCY</b> &bull; " : ""}Position in line: <b>${p.position + 1}</b> &bull; Est. wait: <b>~${p.waitMin} min</b></p>
+      <p style="font-size:12px">${new Date(p.registeredAt).toLocaleString()}</p>
+      <button class="btn sm noprint" onclick="window.print()">🖨 Print token</button></div>`;
+  } catch (e) { toast(e.message, "err"); }
+}
+function goRegister(docId) { preDoc = docId; go("register"); }
+
+function viewPatients() {
+  return `<input class="search" id="q" placeholder="Search by token number, name, phone or complaint..." oninput="doSearch()" autocomplete="off">
+    <div id="results" style="margin-top:16px"><div class="hint">Type to search. Waiting patients can be edited or cancelled here.</div></div>`;
+}
+let searchTimer = null;
+function doSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 220); }
+async function runSearch() {
+  const box = $("#results"); const q = $("#q") ? $("#q").value.trim() : "";
+  if (!box) return;
+  if (!q) { box.innerHTML = '<div class="hint">Type to search. Waiting patients can be edited or cancelled here.</div>'; return; }
+  const my = ++searchSeq;
+  try {
+    const rows = await api("GET", "/search?q=" + encodeURIComponent(q));
+    if (my !== searchSeq) return;
+    box.innerHTML = rows.length ? patientTable(rows, true) : '<div class="hint">No patient found.</div>';
+  } catch (e) { box.innerHTML = '<div class="hint">' + esc(e.message) + "</div>"; }
+}
+function statusBadge(p) {
+  let extra = "";
+  if (p.status === "WAITING" && p.position != null) extra = ` <small style="color:var(--muted)">#${p.position + 1} in line</small>`;
+  return `<span class="badge b-${p.status}">${p.status}</span>${extra}`;
+}
+function patientTable(rows, withActions) {
+  return `<div class="tw"><table><thead><tr><th>Token</th><th>Patient</th><th>Doctor</th><th>Complaint</th><th>Status</th><th>Registered</th>${withActions ? "<th></th>" : "<th>Finished</th>"}</tr></thead><tbody>
+  ${rows.map(p => `<tr>
+    <td><b>#${p.token}</b> ${p.emergency ? "🚨" : ""}</td>
+    <td><b>${esc(p.name)}</b><br><small style="color:var(--muted)">${esc(p.age)} yrs &bull; ${esc(p.gender)} &bull; ${esc(p.phone || "-")}</small></td>
+    <td>${esc(p.doctorName)}<br><small style="color:var(--muted)">${esc(p.department)}</small></td>
+    <td>${esc(p.complaint)}</td><td>${statusBadge(p)}</td><td>${fmtDT(p.registeredAt)}</td>
+    ${withActions ? `<td style="white-space:nowrap">${p.status === "WAITING" ? `<button class="btn sm" onclick="editPatient(${p.token})">✏️ Edit</button> <button class="btn sm danger" onclick="cancelPatient(${p.token})">✖ Cancel</button>` : ""}</td>` : `<td>${fmtDT(p.finishedAt)}</td>`}
+  </tr>`).join("")}</tbody></table></div>`;
+}
+
+async function viewHistory() {
+  const rows = await api("GET", "/history");
+  return rows.length ? patientTable(rows, false) : '<div class="card hint">No finished or cancelled visits yet.</div>';
+}
+async function viewLog() {
+  const rows = await api("GET", "/log");
+  if (!rows.length) return '<div class="card hint">No activity yet.</div>';
+  return `<div class="tw"><table><thead><tr><th>Time</th><th>Action</th><th>Details</th></tr></thead><tbody>
+   ${rows.map(l => `<tr><td style="white-space:nowrap">${fmtDT(l.time)}</td><td><span class="badge b-${esc(l.op)}">${esc(l.op)}</span></td><td>${esc(l.detail)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+function viewBoard() {
+  return `<div class="actions noprint" style="margin:0 0 14px"><button class="btn" onclick="document.documentElement.requestFullscreen && document.documentElement.requestFullscreen()">⛶ Full screen</button></div>
+  <div class="grid board">${S.doctors.map(d => {
+    const next = d.emergency.patients.concat(d.normal.patients).slice(0, 3);
+    return `<div class="card bcard"><div class="dn">${esc(d.name)}</div><div class="dd">${esc(d.department)} &bull; ${esc(d.room)}</div>
+      ${d.serving ? `<div class="num">${d.serving.token}</div><div style="color:var(--ok);font-weight:800;letter-spacing:2px">NOW SERVING</div>` : '<div class="num none">Free</div>'}
+      <div class="nx">Next: ${next.length ? next.map(p => "<b>" + p.token + "</b>").join(" &bull; ") : "<i>none waiting</i>"}</div></div>`;
+  }).join("")}</div>`;
+}
+
+/* ============================ actions ============================ */
+async function callNext(id) { await act(api("POST", "/doctors/" + id + "/call")); }
+async function showNext(id) {
+  try {
+    const p = await api("GET", "/doctors/" + id + "/next");
+    openModal(`<h3>👁 Next patient</h3>
+      <div class="ticket"><div class="big">${p.token}</div><p><b>${esc(p.name)}</b> (${esc(p.age)}, ${esc(p.gender)})</p>
+      <p>${esc(p.complaint)}</p><p>${p.emergency ? "🚨 Emergency" : "Regular"} &bull; est. wait ~${p.waitMin} min</p></div>
+      <p class="note">Viewing does not call the patient.</p>
+      <div class="mfoot"><button class="btn primary" onclick="closeModal();refresh(true)">OK</button></div>`);
+    refresh(true);
+  } catch (e) { toast(e.message, "err"); }
+}
+function findWaiting(token) {
+  for (const d of S.doctors) for (const k of ["emergency", "normal"])
+    for (const p of d[k].patients) if (p.token === token) return p;
+  return null;
+}
+function editPatient(token) {
+  const p = findWaiting(token);
+  if (!p) { toast("Patient is no longer waiting.", "err"); return; }
+  const opts = S.doctors.map(d => `<option value="${d.id}" ${d.id === p.doctorId ? "selected" : ""}>${esc(d.name)} - ${esc(d.department)}</option>`).join("");
+  openModal(`<h3>✏️ Edit token #${p.token}</h3>
+    <div class="f"><label>Name</label><input id="e_name" value="${esc(p.name)}"></div>
+    <div class="row"><div class="f"><label>Age</label><input id="e_age" type="number" value="${esc(p.age)}"></div>
+    <div class="f"><label>Gender</label><select id="e_gender">${["Male", "Female", "Other"].map(g => `<option ${g === p.gender ? "selected" : ""}>${g}</option>`).join("")}</select></div></div>
+    <div class="f"><label>Phone</label><input id="e_phone" value="${esc(p.phone)}"></div>
+    <div class="f"><label>Complaint</label><input id="e_comp" value="${esc(p.complaint)}"></div>
+    <div class="f"><label>Doctor</label><select id="e_doc">${opts}</select></div>
+    <label class="switch"><input type="checkbox" id="e_em" ${p.emergency ? "checked" : ""}><span><b>🚨 Emergency</b></span></label>
+    <p class="note">Changing the doctor or the emergency flag places the patient at the <b>end</b> of the new waiting line. Other edits keep the position.</p>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Close</button><button class="btn primary" onclick="saveEdit(${p.token})">Save changes</button></div>`);
+}
+async function saveEdit(token) {
+  const body = { name: $("#e_name").value, age: $("#e_age").value, gender: $("#e_gender").value, phone: $("#e_phone").value,
+    complaint: $("#e_comp").value, doctorId: parseInt($("#e_doc").value, 10), emergency: $("#e_em").checked };
+  try {
+    await api("PUT", "/patients/" + token, body);
+    closeModal(); toast("Token " + token + " updated", "ok");
+    await refresh(true); if (view === "patients") runSearch();
+  } catch (e) { toast(e.message, "err"); }
+}
+async function cancelPatient(token) {
+  if (!confirm("Cancel token " + token + "?")) return;
+  await act(api("DELETE", "/patients/" + token));
+  if (view === "patients") runSearch();
+}
+function addDoctorModal() {
+  openModal(`<h3>🩺 Add doctor</h3>
+    <div class="f"><label>Name</label><input id="d_name" placeholder="Dr. ..."></div>
+    <div class="f"><label>Department</label><input id="d_dept" placeholder="e.g. ENT"></div>
+    <div class="row"><div class="f"><label>Room</label><input id="d_room" placeholder="Room 5"></div>
+    <div class="f"><label>Avg minutes / patient</label><input id="d_avg" type="number" value="10" min="1" max="120"></div></div>
+    <p class="note">The new doctor starts with no waiting patients.</p>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Close</button><button class="btn primary" onclick="saveDoctor()">Add doctor</button></div>`);
+}
+async function saveDoctor() {
+  try {
+    await api("POST", "/doctors", { name: $("#d_name").value, department: $("#d_dept").value, room: $("#d_room").value, avgMinutes: $("#d_avg").value });
+    closeModal(); toast("Doctor added", "ok"); await refresh(true);
+  } catch (e) { toast(e.message, "err"); }
+}
+async function loadDemo() { await act(api("POST", "/demo")); }
+async function resetAll() {
+  if (!confirm("Delete ALL patients and the operations log? Doctors are kept.")) return;
+  await act(api("POST", "/reset"));
+}
+
+/* ============================ router / render ============================ */
+function go(v) {
+  view = v;
+  if (location.hash !== "#" + v) history.replaceState(null, "", "#" + v);
+  document.querySelectorAll(".nav").forEach(b => b.classList.toggle("active", b.dataset.view === v));
+  $("#pageTitle").firstChild.nodeValue = TITLES[v][0];
+  $("#pageSub").textContent = TITLES[v][1];
+  render(true);
+}
+async function render(force) {
+  const box = $("#view");
+  if (!S) { box.innerHTML = '<div class="card hint">Waiting for the server...</div>'; return; }
+  // views with inputs are only drawn once, so typing is never interrupted
+  if (view === "register") { if (force) { box.innerHTML = viewRegister(); regPreview(); } else regPreview(); return; }
+  if (view === "patients") { if (force) { box.innerHTML = viewPatients(); } return; }
+  const v0 = view;
+  try {
+    let html;
+    if (view === "dashboard") html = viewDashboard();
+    else if (view === "board") html = viewBoard();
+    else if (view === "history") html = await viewHistory();
+    else html = await viewLog();
+    if (v0 === view) box.innerHTML = html;
+  } catch (e) { box.innerHTML = '<div class="card hint">' + esc(e.message) + "</div>"; }
+}
+async function refresh(force) {
+  try { S = await api("GET", "/state"); } catch (e) { return; }
+  if (modalOpen() && !force) return;
+  await render(false);
+}
+document.querySelectorAll(".nav").forEach(b => b.addEventListener("click", () => go(b.dataset.view)));
+window.addEventListener("hashchange", () => { const v = location.hash.slice(1); if (TITLES[v] && v !== view) go(v); });
+
+(async function init() {
+  try { S = await api("GET", "/state"); } catch (e) { toast(e.message, "err"); }
+  const v = location.hash.slice(1);
+  go(TITLES[v] ? v : "dashboard");
+  setInterval(() => { refresh(false); }, 2500);
+})();
+</script>
+</body>
+</html>
